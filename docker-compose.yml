@@ -1,28 +1,32 @@
 services:
-  db:
+  odoo-db:
     image: postgres:15
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: odoo
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - odoo-db-data:/var/lib/postgresql/data
+      - odoo-iniwave-db-data:/var/lib/postgresql/data
     restart: unless-stopped
 
   odoo:
     image: odoo:17
     depends_on:
-      - db
-    ports:
-      - "8069:8069"
+      - odoo-db
     environment:
-      HOST: db
+      HOST: odoo-db
       USER: odoo
       PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - odoo-web-data:/var/lib/odoo
+      - odoo-iniwave-web-data:/var/lib/odoo
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.odoo-iniwave.rule=Host(`odoo-iniwave.luluplug.com`)"
+      - "traefik.http.routers.odoo-iniwave.entrypoints=websecure"
+      - "traefik.http.routers.odoo-iniwave.tls.certresolver=letsencrypt"
+      - "traefik.http.services.odoo-iniwave.loadbalancer.server.port=8069"
 
 volumes:
-  odoo-db-data:
-  odoo-web-data:
+  odoo-iniwave-db-data:
+  odoo-iniwave-web-data:
