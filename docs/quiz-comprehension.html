@@ -1,0 +1,340 @@
+<title>Quiz — Projet Iniwave</title>
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --surface-2: #f0ede5;
+    --line: #ddd7c8;
+    --text: #201d18;
+    --text-dim: #6b6459;
+    --accent: #b85c1e;
+    --accent-soft: rgba(184, 92, 30, 0.13);
+    --accent-text: #ffffff;
+    --good: #2f6b45;
+    --good-soft: rgba(47, 107, 69, 0.12);
+    --grid-dot: rgba(184, 92, 30, 0.07);
+    --shadow: 0 1px 2px rgba(32, 29, 24, 0.06), 0 8px 24px rgba(32, 29, 24, 0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15171b; --surface: #1c1f24; --surface-2: #23262c; --line: #33373f;
+      --text: #eae7df; --text-dim: #9599a1;
+      --accent: #e08a3c; --accent-soft: rgba(224, 138, 60, 0.16); --accent-text: #1c1206;
+      --good: #6fbf8b; --good-soft: rgba(111, 191, 139, 0.14);
+      --grid-dot: rgba(224, 138, 60, 0.08);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 32px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15171b; --surface: #1c1f24; --surface-2: #23262c; --line: #33373f;
+    --text: #eae7df; --text-dim: #9599a1;
+    --accent: #e08a3c; --accent-soft: rgba(224, 138, 60, 0.16); --accent-text: #1c1206;
+    --good: #6fbf8b; --good-soft: rgba(111, 191, 139, 0.14);
+    --grid-dot: rgba(224, 138, 60, 0.08);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 32px rgba(0,0,0,0.35);
+  }
+  :root[data-theme="light"] {
+    --bg: #f7f5f0; --surface: #ffffff; --surface-2: #f0ede5; --line: #ddd7c8;
+    --text: #201d18; --text-dim: #6b6459;
+    --accent: #b85c1e; --accent-soft: rgba(184, 92, 30, 0.13); --accent-text: #ffffff;
+    --good: #2f6b45; --good-soft: rgba(47, 107, 69, 0.12);
+    --grid-dot: rgba(184, 92, 30, 0.07);
+    --shadow: 0 1px 2px rgba(32,29,24,0.06), 0 8px 24px rgba(32,29,24,0.05);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, -apple-system, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
+    background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  body { line-height: 1.55; -webkit-font-smoothing: antialiased; }
+
+  .wrap { max-width: 740px; margin: 0 auto; padding: 0 20px 80px; }
+
+  header.top {
+    position: sticky; top: 0; z-index: 5;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .top-inner {
+    max-width: 740px; margin: 0 auto; padding: 14px 20px;
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  }
+  .top-brand {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim);
+  }
+  .top-brand strong { color: var(--accent); font-weight: 700; }
+  .top-score {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px; color: var(--text-dim);
+  }
+
+  .hero { padding: 40px 0 8px; }
+  .hero-eyebrow {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent);
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-family: ui-serif, "New York", Georgia, "Times New Roman", serif;
+    font-size: clamp(26px, 5vw, 36px); line-height: 1.15; letter-spacing: -0.01em;
+    margin: 0 0 14px; text-wrap: balance; font-weight: 600;
+  }
+  .lede { font-size: 15.5px; color: var(--text-dim); max-width: 62ch; margin: 0 0 8px; }
+  .instructions {
+    margin-top: 20px; background: var(--surface); border: 1px solid var(--line);
+    border-left: 3px solid var(--accent); border-radius: 6px; padding: 14px 18px;
+    font-size: 14px; color: var(--text-dim); box-shadow: var(--shadow);
+  }
+
+  section { margin-top: 44px; }
+  .s-eyebrow {
+    display: flex; align-items: center;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim);
+    margin: 0 0 6px;
+  }
+  .s-eyebrow::before {
+    content: ""; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
+    display: inline-block; margin-right: 10px; flex: none;
+  }
+  h2 {
+    font-family: ui-serif, "New York", Georgia, serif; font-size: 22px; font-weight: 600;
+    margin: 0 0 16px 18px; letter-spacing: -0.01em;
+  }
+  .qlist { margin-left: 18px; display: grid; gap: 10px; }
+
+  details.qa {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  details.qa summary {
+    cursor: pointer; padding: 14px 18px; font-size: 14.5px; font-weight: 600;
+    list-style: none; display: flex; gap: 10px; align-items: baseline;
+  }
+  details.qa summary::-webkit-details-marker { display: none; }
+  details.qa summary::before {
+    content: "+"; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    color: var(--accent); font-weight: 700; flex: none; width: 14px;
+  }
+  details.qa[open] summary::before { content: "–"; }
+  details.qa[open] summary { border-bottom: 1px solid var(--line); }
+  .qa-answer {
+    padding: 14px 18px 16px 42px; font-size: 14px; color: var(--text-dim);
+    background: var(--surface-2);
+  }
+  .qa-answer strong { color: var(--text); }
+  .qa-answer code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 4px; padding: 1px 5px; font-size: 0.92em;
+  }
+
+  footer {
+    margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px; color: var(--text-dim);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    section { animation: rise 0.4s ease both; }
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) { section { animation: none; } }
+
+  @media (max-width: 480px) {
+    h2, .qlist { margin-left: 0; }
+    .qa-answer { padding-left: 18px; }
+  }
+</style>
+
+<header class="top">
+  <div class="top-inner">
+    <span class="top-brand"><strong>PROJET INIWAVE</strong> · quiz de compréhension</span>
+    <span class="top-score">8 sections</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <p class="hero-eyebrow">Auto-évaluation avant l'entretien</p>
+    <h1>Est-ce que tu comprends vraiment ton projet ?</h1>
+    <p class="lede">Toutes les questions couvrent des choses qu'on a réellement rencontrées en le construisant. Essaie de répondre dans ta tête avant de cliquer sur une question pour voir la réponse.</p>
+    <div class="instructions">Clique sur une question pour révéler la réponse. Si tu bloques sur plusieurs questions d'une même section, relis la partie correspondante de <code>projet-iniwave.md</code> ou redemande une explication simple avant l'entretien.</div>
+  </div>
+
+  <section>
+    <p class="s-eyebrow">01</p>
+    <h2>CRM vs ERP</h2>
+    <div class="qlist">
+      <details class="qa">
+        <summary>Que veut dire CRM ? Et ERP ?</summary>
+        <div class="qa-answer"><strong>CRM</strong> = Customer Relationship Management (gestion de la relation client, avant la vente). <strong>ERP</strong> = Enterprise Resource Planning (planification des ressources de l'entreprise, après la vente : compta, stock).</div>
+      </details>
+      <details class="qa">
+        <summary>Le stock de produits en entrepôt : CRM ou ERP ? Pourquoi ?</summary>
+        <div class="qa-answer"><strong>ERP.</strong> C'est une ressource interne de l'entreprise, indépendante de la relation avec un client précis — rien à voir avec une négociation commerciale.</div>
+      </details>
+      <details class="qa">
+        <summary>À quel moment précis bascule-t-on du CRM à l'ERP dans ce projet ?</summary>
+        <div class="qa-answer">Quand le deal HubSpot passe au statut <strong>"Closed Won"</strong> — le signal que la vente est actée, et que le relais doit être pris côté gestion/comptabilité.</div>
+      </details>
+    </div>
+  </section>
+
+  <section>
+    <p class="s-eyebrow">02</p>
+    <h2>HubSpot &amp; API</h2>
+    <div class="qlist">
+      <details class="qa">
+        <summary>Que signifie "Closed Won" ?</summary>
+        <div class="qa-answer">Le deal est <strong>clos</strong> ("Closed") et <strong>gagné</strong> ("Won") — le contrat est signé.</div>
+      </details>
+      <details class="qa">
+        <summary>Pourquoi le deal HubSpot ne contient-il pas directement le nom ou l'email du client ?</summary>
+        <div class="qa-answer">Un deal est relié à un Contact/une Entreprise via un lien séparé, une <strong>association</strong> — pas fusionné dans le même enregistrement. Il faut un appel séparé pour récupérer les infos du contact.</div>
+      </details>
+      <details class="qa">
+        <summary>Pourquoi utiliser <code>/deals/search</code> (POST) plutôt qu'un simple GET liste ?</summary>
+        <div class="qa-answer">L'endpoint de recherche permet de <strong>filtrer</strong> (dealstage = closedwon) ET de <strong>trier</strong> (par date de modification) directement côté serveur, plutôt que de tout récupérer et filtrer après — plus économe en appels API (rate limiting).</div>
+      </details>
+      <details class="qa">
+        <summary>Pourquoi a-t-on besoin d'un deuxième appel HTTP pour connaître le nom/email du client ?</summary>
+        <div class="qa-answer">Le premier appel ne donne que l'<strong>ID</strong> du contact associé. Il faut un second appel GET sur cet ID précis pour récupérer ses propriétés (firstname, lastname, email).</div>
+      </details>
+      <details class="qa">
+        <summary>Comment savoir s'il faut utiliser GET ou POST ?</summary>
+        <div class="qa-answer"><strong>GET</strong> = on demande/lit une info, rien ne change côté serveur. <strong>POST</strong> = on envoie des données pour créer/déclencher une action. La recherche de deals est en POST car HubSpot a besoin qu'on lui envoie un corps JSON avec les filtres.</div>
+      </details>
+    </div>
+  </section>
+
+  <section>
+    <p class="s-eyebrow">03</p>
+    <h2>n8n — mécaniques</h2>
+    <div class="qlist">
+      <details class="qa">
+        <summary>Différence entre polling et webhook ?</summary>
+        <div class="qa-answer"><strong>Webhook</strong> = la source (HubSpot) prévient automatiquement. <strong>Polling</strong> = on va soi-même demander à intervalle régulier. On a utilisé le polling ici car la clé de service HubSpot choisie ne proposait pas de configuration de webhook.</div>
+      </details>
+      <details class="qa">
+        <summary>Pourquoi parfois <code>$json</code> ne suffit pas et il faut écrire <code>$('NomDuNoeud').item.json...</code> ?</summary>
+        <div class="qa-answer"><code>$json</code> référence toujours la sortie du nœud <strong>immédiatement précédent</strong>. Dès qu'on enchaîne plusieurs appels, chaque nouveau nœud le remplace. Pour retrouver une donnée d'un nœud plus ancien, il faut le référencer explicitement par son nom.</div>
+      </details>
+      <details class="qa">
+        <summary>À quoi sert le nœud Merge dans le workflow ?</summary>
+        <div class="qa-answer">À réunir deux chemins alternatifs (client neuf créé, ou client déjà existant retrouvé) en une seule sortie commune, pour que la suite reçoive toujours la même forme de donnée peu importe le chemin emprunté.</div>
+      </details>
+      <details class="qa">
+        <summary>Pourquoi le nœud IF anti-doublon vérifie <code>result.length === 0</code> ?</summary>
+        <div class="qa-answer">La recherche renvoie une <strong>liste</strong> de résultats. Vide (longueur 0) = rien n'existe encore, on peut créer. Non vide = quelque chose existe déjà, on s'arrête.</div>
+      </details>
+    </div>
+  </section>
+
+  <section>
+    <p class="s-eyebrow">04</p>
+    <h2>Odoo &amp; JSON-RPC</h2>
+    <div class="qlist">
+      <details class="qa">
+        <summary>Pourquoi Odoo n'utilise pas une API REST classique comme HubSpot ?</summary>
+        <div class="qa-answer">Odoo (Community, sans module REST additionnel) expose son API via <strong>JSON-RPC</strong> : chaque appel dit "appelle telle fonction, avec tels arguments", plutôt que de simplement consulter une URL.</div>
+      </details>
+      <details class="qa">
+        <summary>Que représentent <code>res.partner</code>, <code>sale.order</code>, <code>account.move</code> ?</summary>
+        <div class="qa-answer"><code>res.partner</code> = fiche client. <code>sale.order</code> = commande. <code>account.move</code> = facture (et plus largement, écriture comptable).</div>
+      </details>
+      <details class="qa">
+        <summary>Pourquoi l'appel à <code>_create_invoices</code> a-t-il été refusé par Odoo ?</summary>
+        <div class="qa-answer">Le underscore en préfixe signifie "méthode <strong>privée</strong>, réservée à l'usage interne" — Odoo bloque volontairement l'appel de méthodes privées depuis l'extérieur, par sécurité.</div>
+      </details>
+      <details class="qa">
+        <summary>Par quoi a-t-on remplacé cet appel ?</summary>
+        <div class="qa-answer">Par une création directe de l'objet <code>account.move</code> (facture), une méthode publique standard, plutôt que de passer par le mécanisme interne de la commande.</div>
+      </details>
+      <details class="qa">
+        <summary>Pourquoi une ligne de commande a besoin d'un <code>product_id</code>, pas juste d'un texte libre ?</summary>
+        <div class="qa-answer">Une contrainte de la base de données Odoo exige qu'une ligne "facturable" soit reliée à un vrai produit avec une unité de mesure — sinon elle n'est pas considérée comme comptabilisable.</div>
+      </details>
+    </div>
+  </section>
+
+  <section>
+    <p class="s-eyebrow">05</p>
+    <h2>Infra — Docker, VPS, réseau</h2>
+    <div class="qlist">
+      <details class="qa">
+        <summary>Pourquoi a-t-on dû déplacer Odoo du Mac vers le VPS ?</summary>
+        <div class="qa-answer">n8n tournait à distance, sur le VPS. "localhost" depuis le VPS désigne le VPS lui-même, pas le Mac — n8n ne pouvait donc pas atteindre l'Odoo qui tournait en local.</div>
+      </details>
+      <details class="qa">
+        <summary>Pourquoi deux conteneurs séparés (Odoo + Postgres) plutôt qu'un seul ?</summary>
+        <div class="qa-answer">Séparation des responsabilités : on peut mettre à jour/redémarrer Odoo sans toucher à la base de données, et on réutilise l'image Postgres officielle plutôt que de réinventer la gestion de base.</div>
+      </details>
+      <details class="qa">
+        <summary>Que fait Traefik dans cette architecture ?</summary>
+        <div class="qa-answer">C'est le "réceptionniste" du serveur : il regarde le nom de domaine demandé et redirige vers le bon conteneur, en gérant aussi automatiquement le certificat HTTPS (Let's Encrypt).</div>
+      </details>
+      <details class="qa">
+        <summary>Pourquoi le certificat HTTPS a-t-il échoué au premier essai ?</summary>
+        <div class="qa-answer">Traefik a tenté d'obtenir le certificat avant que l'enregistrement DNS n'ait eu le temps de se propager sur Internet. Une fois le DNS confirmé, un redémarrage de Traefik a suffi.</div>
+      </details>
+    </div>
+  </section>
+
+  <section>
+    <p class="s-eyebrow">06</p>
+    <h2>Sécurité</h2>
+    <div class="qlist">
+      <details class="qa">
+        <summary>Pourquoi ne jamais laisser un mot de passe en clair dans un fichier suivi par Git ?</summary>
+        <div class="qa-answer">Un dépôt versionné — surtout s'il devient public un jour — peut exposer ce secret définitivement dans l'historique. Des scanners automatiques parcourent GitHub en continu à la recherche de ce genre de fuite.</div>
+      </details>
+      <details class="qa">
+        <summary>Comment le principe du moindre privilège a été appliqué sur la clé HubSpot ?</summary>
+        <div class="qa-answer">La clé de service créée n'a que 3 scopes en <strong>lecture seule</strong> (deals, contacts, companies) — jamais de droits d'écriture, alors que le workflow n'a besoin que de lire des informations côté HubSpot.</div>
+      </details>
+    </div>
+  </section>
+
+  <section>
+    <p class="s-eyebrow">07</p>
+    <h2>SQL</h2>
+    <div class="qlist">
+      <details class="qa">
+        <summary>Que fait une jointure (JOIN) dans la requête SQL utilisée ?</summary>
+        <div class="qa-answer">Elle relie deux tables (<code>account_move</code> et <code>res_partner</code>) via une colonne commune (<code>partner_id</code>), pour afficher en une seule requête des informations qui vivent dans des tables séparées.</div>
+      </details>
+      <details class="qa">
+        <summary>Pourquoi interroger Postgres directement plutôt que par l'API dans ce cas ?</summary>
+        <div class="qa-answer">Pour des besoins de vérification/reporting ponctuels, une requête SQL directe est souvent plus rapide et flexible qu'un enchaînement d'appels API — mais ça demande d'exposer un accès à la base, à faire avec précaution (isolation réseau en vraie prod).</div>
+      </details>
+    </div>
+  </section>
+
+  <section>
+    <p class="s-eyebrow">08</p>
+    <h2>Gestion d'erreur</h2>
+    <div class="qlist">
+      <details class="qa">
+        <summary>Comment fonctionne le mécanisme d'Error Trigger de n8n ?</summary>
+        <div class="qa-answer">Ce n'est pas un nœud inséré dans le workflow principal — c'est un <strong>deuxième workflow séparé</strong>, contenant un nœud Error Trigger, désigné dans les Settings du workflow principal ("Error Workflow"). n8n le déclenche automatiquement, avec les détails de l'échec, si n'importe quel nœud du principal plante.</div>
+      </details>
+    </div>
+  </section>
+
+  <footer>
+    <span>8 sections, 22 questions</span>
+    <span>Relis ce qui coince avant l'entretien</span>
+  </footer>
+
+</div>
