@@ -1,33 +1,73 @@
-# Projet Iniwave — Démo CRM → ERP
+# Intégration CRM → ERP (HubSpot → n8n → Odoo)
 
-Projet construit pour l'entretien présentiel (2 personnes de l'équipe technique / fondateurs) chez **Iniwave**, cabinet d'intégration NetSuite. Objectif : montrer une démo live d'automatisation qui reproduit exactement leur cas d'usage cité en exemple dans la fiche de poste (*"Salesforce vers Netsuite"*), avec des outils réellement construits par moi, pas juste racontés.
+Pipeline d'automatisation qui synchronise automatiquement un CRM et un ERP : dès qu'une vente est conclue côté commercial, le client, la commande puis la facture sont créés côté gestion, sans ressaisie manuelle. C'est le même schéma d'intégration que l'on retrouve derrière n'importe quel connecteur CRM/ERP d'entreprise (Salesforce → NetSuite, HubSpot → SAP, etc.), construit et testé de bout en bout avec des outils accessibles.
 
-## Pourquoi Odoo à la place de NetSuite
+## Le cas d'usage
 
-NetSuite est un logiciel d'entreprise vendu via un processus commercial (pas de self-service, pas d'essai gratuit accessible en quelques semaines sans budget). **Odoo** est utilisé comme ERP de démonstration : open source, auto-hébergeable, avec les mêmes objets métier qu'un ERP classique (clients, commandes, factures, champs personnalisés). Le principe d'intégration (API REST, authentification, mapping de champs, idempotence) est strictement identique — le code est transférable à NetSuite avec un changement d'endpoints, pas de logique.
+Une entreprise type gère ses ventes dans un CRM et sa comptabilité/logistique dans un ERP séparé. Sans automatisation, chaque vente conclue implique une double saisie manuelle (le commercial dans le CRM, l'administratif dans l'ERP), source d'erreurs et de délais. Ce projet élimine cette étape : la détection d'une vente conclue déclenche automatiquement la création de la fiche client, de la commande puis de la facture, avec une protection anti-doublon et une alerte automatique en cas d'échec.
 
-**À dire clairement en entretien** (rigueur > bluff) : *"J'ai reproduit l'architecture exacte que vous décrivez, avec un ERP open-source accessible plutôt que NetSuite qui nécessite une licence entreprise. Le pattern d'intégration est identique."*
+## Pourquoi Odoo plutôt que Salesforce/NetSuite
+
+HubSpot et Odoo sont des outils accessibles (gratuits ou open source), utilisés ici comme représentants d'un CRM et d'un ERP d'entreprise. Le pattern d'intégration (authentification API, mapping de champs, idempotence, gestion d'erreurs) est strictement identique à celui qu'on retrouverait avec des outils propriétaires comme Salesforce ou NetSuite : seuls les endpoints et le format d'authentification changent, pas la logique.
 
 ## Architecture
 
 ```
-HubSpot (CRM, gratuit)
-   │  webhook : deal passé en "Closed Won"
+HubSpot (CRM)
+   │  polling toutes les 5 minutes
    ▼
-n8n (auto-hébergé, Docker)
-   │  1. Webhook Trigger (reçoit le deal)
-   │  2. Code node (JS) : mapping des champs HubSpot → format Odoo
-   │  3. HTTP Request : vérifier si le client existe déjà dans Odoo (idempotence)
-   │  4. Switch : client existant ? sinon → créer
-   │  5. HTTP Request : créer/mettre à jour la commande (sale.order) dans Odoo
-   │  6. Postgres node : requête SQL directe sur la base Odoo (vérification/reporting)
-   │  7. Error Trigger : notification (email/Slack) si une étape échoue
+n8n (auto-hébergé, Docker + Traefik + HTTPS, VPS)
+   │  1. Recherche des deals "Closed Won" (HubSpot, API REST)
+   │  2. Garde-fou : aucun résultat → arrêt propre (évite de traiter le mauvais enregistrement)
+   │  3. Récupération du détail du deal + du contact associé
+   │  4. Authentification Odoo (JSON-RPC)
+   │  5. Anti-doublon commande (recherche par référence externe = ID du deal)
+   │  6. Anti-doublon / réutilisation client (recherche par email)
+   │  7. Création du client si nouveau
+   │  8. Création de la commande (sale.order)
+   │  9. Confirmation de la commande
+   │ 10. Création de la facture (account.move)
+   │ 11. Vérification indépendante par requête SQL directe sur la base (Postgres)
    ▼
-Odoo (self-hébergé, Docker, Postgres)
+Odoo (ERP, self-hébergé, Docker, Postgres)
    Client (res.partner) → Commande (sale.order) → Facture (account.move)
+
+En parallèle : workflow d'erreurs dédié (Error Trigger), qui surveille chaque étape
+ci-dessus et notifie automatiquement un canal Slack en cas d'échec, avec le nœud
+fautif et un lien direct vers l'exécution concernée.
 ```
 
-## Correspondance Odoo ↔ NetSuite (à connaître par cœur pour l'entretien)
+## Pourquoi une requête SQL directe sur la base (dernière étape du flux)
+
+Le dernier nœud du workflow interroge directement la base Postgres d'Odoo, en dehors de son API, pour deux raisons :
+
+1. **Démontrer une compétence complémentaire** — savoir parler directement à une base de données, pas seulement consommer une API REST/JSON-RPC.
+2. **Vérifier indépendamment ce qui a été créé** — l'API répond « facture créée avec succès » en parlant d'elle-même ; la requête SQL relit directement la table pour confirmer que la facture existe bien, avec le bon client rattaché. Un contrôle qui ne dépend pas de ce que le système affirme sur lui-même.
+
+## Défis techniques réels rencontrés
+
+Le pipeline a été testé en conditions réelles (création de vrais deals HubSpot, exécutions réelles observées de bout en bout), ce qui a fait remonter plusieurs bugs de production, pas seulement des cas d'école :
+
+- **Échec silencieux sur recherche vide** : quand aucun deal "Closed Won" ne correspondait, l'étape suivante continuait avec un identifiant vide, ce que l'API interprétait comme une demande différente (liste générale au lieu d'un enregistrement précis) — le workflow traitait alors un enregistrement au hasard comme s'il était valide. Corrigé par un garde-fou qui force un arrêt propre et explicite plutôt qu'un comportement indéfini.
+- **Anti-doublon à deux niveaux** : un deal ne doit jamais générer deux commandes, et un client ne doit jamais être dupliqué s'il existe déjà (recherche par référence externe et par email avant toute création).
+- **Idempotence des identifiants** : la référence externe utilisée pour la déduplication est l'identifiant du deal côté CRM, pas un identifiant interne, pour rester stable même si le workflow est rejoué.
+
+## Ce que chaque brique démontre
+
+| Compétence | Élément du projet |
+|---|---|
+| Conception d'architectures de flux CRM → ERP | Schéma HubSpot → n8n → Odoo, table de correspondance ci-dessous |
+| Workflows n8n complexes (branches, fusions, conditions) | Anti-doublon commande/client, fusion des branches client neuf/existant |
+| Détection d'événements et polling | Recherche périodique des deals conclus côté CRM |
+| Gestion des erreurs & monitoring | Workflow d'erreurs séparé, alerte Slack automatique, garde-fou sur les cas limites |
+| Authentification API & sécurité | Authentification par clé API (Odoo) et par token (HubSpot), secrets exclus du dépôt |
+| REST et RPC | API REST HubSpot, API JSON-RPC Odoo (deux paradigmes différents dans un même projet) |
+| SQL (PostgreSQL) | Requête directe sur la base Odoo pour vérification indépendante |
+| Connaissances CRM/ERP | Table de correspondance Odoo/NetSuite, modèle de données client-commande-facture |
+| Docker & déploiement | n8n et Odoo auto-hébergés en Docker sur VPS, HTTPS via Traefik |
+| Débogage en conditions réelles | Bugs de production identifiés et corrigés à partir de vraies exécutions, pas de cas simulés |
+
+## Correspondance Odoo ↔ NetSuite
 
 | Concept métier | Odoo | NetSuite (équivalent) |
 |---|---|---|
@@ -36,51 +76,8 @@ Odoo (self-hébergé, Docker, Postgres)
 | Facture | `account.move` | Invoice |
 | Ligne de commande | `sale.order.line` | Sales Order Line |
 | Champ personnalisé | Custom field (Studio/XML) | Custom field (record customization) |
-| API | JSON-RPC / XML-RPC ou REST (module) | SuiteTalk REST / SOAP |
+| API | JSON-RPC / XML-RPC | SuiteTalk REST / SOAP |
 | Auth | Clé API / OAuth2 (module) | OAuth 2.0 / Token-based |
-
-## Ce que chaque brique démontre (mapping direct avec la fiche de poste)
-
-| Point de la fiche de poste | Élément du projet |
-|---|---|
-| Conception d'architectures de flux (Salesforce → NetSuite) | Schéma HubSpot → n8n → Odoo, table de correspondance ci-dessus |
-| Workflows n8n complexes (loops, merges, If/Else, Switch) | Switch (client existant ou non), Merge (client + lignes de commande) |
-| Webhooks entrants/sortants | Webhook Trigger HubSpot → n8n |
-| Gestion des erreurs & monitoring | Error Trigger node + alerte, idempotence anti-doublon |
-| Credentials & sécurité | Credentials n8n pour HubSpot (OAuth2) et Odoo (clé API), variables d'environnement |
-| REST, OAuth2, API Keys, rate limiting | HubSpot OAuth2, Odoo API key, retry/backoff sur le nœud HTTP Request |
-| JavaScript pour transformation de données | Code node : aplatissement JSON imbriqué (deal + line items + champs custom) |
-| SQL (PostgreSQL) | Nœud Postgres : requête directe sur la base Odoo pour un rapport de vérification |
-| ETL — nettoyer/mapper données hétérogènes | Mapping des champs HubSpot (deal) vers les champs Odoo (sale.order) |
-| Connaissances CRM/ERP | Table de correspondance Odoo/NetSuite, modèle de données |
-| Docker (auto-hébergement n8n) | n8n ET Odoo tournent en Docker |
-| Git | Projet versionné, dépôt Git |
-
-## Plan de construction (2-3 semaines)
-
-**Semaine 1 — Infra**
-- [x] Scaffold du projet (ce dépôt)
-- [ ] Odoo self-hébergé en local (Docker), apps Ventes/Facturation/Contacts activées
-- [ ] Compte HubSpot (réutilisation du compte du projet NovaSupply) : objet Deal configuré avec les champs nécessaires
-- [ ] App HubSpot privée créée (clé API ou OAuth2) pour le webhook sortant
-
-**Semaine 2 — Workflow n8n**
-- [ ] Webhook Trigger + réception d'un vrai payload HubSpot (test réel, capturé et sauvegardé)
-- [ ] Code node : mapping JS des champs
-- [ ] Intégration API Odoo : recherche client, création client si absent, création commande, création facture
-- [ ] Idempotence : ne jamais créer deux fois la même commande
-- [ ] Error Trigger + alerte (email ou Slack)
-- [ ] Nœud Postgres : requête SQL directe de vérification
-
-**Semaine 3 — Durcissement + répétition**
-- [ ] Test de bout en bout avec plusieurs cas (client existant, client nouveau, erreur volontaire)
-- [ ] Sauvegarde d'un payload HubSpot réel pour la démo (mode "replay" local, indépendant du wifi le jour J)
-- [ ] Script de démo minuté (voir `docs/demo-script.md`)
-- [ ] Répétitions à voix haute, chronométrées
-
-## Fiabilité du jour J
-
-Le jour de l'entretien, ne pas dépendre du wifi du bureau pour le webhook HubSpot en direct : le nœud Webhook de n8n sera déclenché avec un **vrai payload HubSpot capturé pendant les tests** (fichier JSON sauvegardé), rejoué localement. La chaîne reste 100% authentique (le payload est réel, capturé sur un vrai événement), seul le déclenchement est manuel pour éviter le risque de démo ratée à cause d'une connexion instable.
 
 ## Démarrer l'environnement local
 
@@ -94,5 +91,6 @@ docker compose up -d
 
 - `docker-compose.yml` — stack Odoo + Postgres
 - `docs/mapping-netsuite-odoo.md` — détail de la correspondance des objets
-- `docs/demo-script.md` — script minuté de la démo live
-- `n8n/` — export du workflow n8n (ajouté une fois construit et testé)
+- `docs/schema-infra.html` — schéma visuel de l'infrastructure
+- `docs/demo-script.md` — script de démonstration détaillé du pipeline, étape par étape
+- `docs/quiz-comprehension.html` — quiz d'auto-évaluation sur l'architecture (22 questions)

@@ -1,0 +1,284 @@
+<title>Architecture Iniwave</title>
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --surface-2: #f0ede5;
+    --line: #ddd7c8;
+    --text: #201d18;
+    --text-dim: #6b6459;
+    --accent: #b85c1e;
+    --accent-soft: rgba(184, 92, 30, 0.13);
+    --accent-text: #ffffff;
+    --good: #2f6b45;
+    --good-soft: rgba(47, 107, 69, 0.12);
+    --wire: #55606b;
+    --wire-soft: rgba(85, 96, 107, 0.07);
+    --grid-dot: rgba(184, 92, 30, 0.07);
+    --shadow: 0 1px 2px rgba(32, 29, 24, 0.06), 0 8px 24px rgba(32, 29, 24, 0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171b; --surface: #1c1f24; --surface-2: #23262c; --line: #33373f;
+      --text: #eae7df; --text-dim: #9599a1;
+      --accent: #e08a3c; --accent-soft: rgba(224, 138, 60, 0.16); --accent-text: #1c1206;
+      --good: #6fbf8b; --good-soft: rgba(111, 191, 139, 0.14);
+      --wire: #93a0ac; --wire-soft: rgba(147, 160, 172, 0.10);
+      --grid-dot: rgba(224, 138, 60, 0.08);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 32px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15171b; --surface: #1c1f24; --surface-2: #23262c; --line: #33373f;
+    --text: #eae7df; --text-dim: #9599a1;
+    --accent: #e08a3c; --accent-soft: rgba(224, 138, 60, 0.16); --accent-text: #1c1206;
+    --good: #6fbf8b; --good-soft: rgba(111, 191, 139, 0.14);
+    --wire: #93a0ac; --wire-soft: rgba(147, 160, 172, 0.10);
+    --grid-dot: rgba(224, 138, 60, 0.08);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 32px rgba(0,0,0,0.35);
+  }
+  :root[data-theme="light"] {
+    --bg: #f7f5f0; --surface: #ffffff; --surface-2: #f0ede5; --line: #ddd7c8;
+    --text: #201d18; --text-dim: #6b6459;
+    --accent: #b85c1e; --accent-soft: rgba(184, 92, 30, 0.13); --accent-text: #ffffff;
+    --good: #2f6b45; --good-soft: rgba(47, 107, 69, 0.12);
+    --wire: #55606b; --wire-soft: rgba(85, 96, 107, 0.07);
+    --grid-dot: rgba(184, 92, 30, 0.07);
+    --shadow: 0 1px 2px rgba(32,29,24,0.06), 0 8px 24px rgba(32,29,24,0.05);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, -apple-system, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
+    background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  body { line-height: 1.55; -webkit-font-smoothing: antialiased; }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 48px 20px 80px; }
+
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 10px;
+  }
+  h1 {
+    font-family: ui-serif, "New York", Georgia, "Times New Roman", serif;
+    font-size: clamp(26px, 4.2vw, 33px);
+    line-height: 1.18; letter-spacing: -0.01em; margin: 0 0 12px;
+    text-wrap: balance; font-weight: 600;
+  }
+  .lede { font-size: 15.5px; color: var(--text-dim); max-width: 66ch; margin: 0 0 32px; }
+
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 26px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-dim); }
+  .legend-mark { width: 22px; height: 0; border-top-width: 2px; border-top-style: solid; flex: none; }
+  .legend-mark.dim { border-color: var(--wire); }
+  .legend-mark.hot { border-color: var(--accent); border-top-width: 3px; }
+  .legend-box { width: 14px; height: 14px; border-radius: 3px; border: 1.5px dashed var(--wire); flex: none; }
+
+  figure { margin: 0 0 36px; }
+  .diagram-frame {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 8px; overflow-x: auto;
+  }
+  .diagram-frame svg { display: block; width: 100%; height: auto; min-width: 720px; }
+  figcaption { font-size: 13px; color: var(--text-dim); margin-top: 12px; max-width: 68ch; }
+
+  .callout {
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+    border-radius: 10px; padding: 20px 24px; margin: 0 0 20px;
+  }
+  .callout.wire {
+    background: var(--wire-soft); border-color: color-mix(in srgb, var(--wire) 35%, var(--line));
+  }
+  .callout.wire p.kicker, .callout.wire h2 { color: var(--text); }
+  .callout.wire p.kicker { color: var(--wire); }
+  .callout p.kicker {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 8px; font-weight: 700;
+  }
+  .callout h2 {
+    font-family: ui-serif, "New York", Georgia, serif; font-size: 19px; font-weight: 600;
+    margin: 0 0 10px;
+  }
+  .callout p { margin: 0 0 8px; font-size: 14.5px; }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 4px; padding: 1px 5px; font-size: 0.88em;
+  }
+
+  .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 36px; }
+  @media (max-width: 720px) { .facts { grid-template-columns: 1fr 1fr; } }
+  .fact-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 14px 16px; box-shadow: var(--shadow);
+  }
+  .fact-card .label {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--text-dim); margin: 0 0 6px;
+  }
+  .fact-card .value { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+  .fact-card .detail { font-size: 12px; color: var(--text-dim); margin: 0; }
+
+  footer {
+    margin-top: 8px; padding-top: 18px; border-top: 1px solid var(--line);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px; color: var(--text-dim); line-height: 1.7;
+  }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Projet Iniwave · Infrastructure</p>
+  <h1>Un VPS, un seul point d'entrée, des réseaux qui s'ignorent</h1>
+  <p class="lede">Odoo, n8n et deux autres projets tournent sur le même serveur, chacun dans son réseau Docker isolé. Traefik est le seul point d'entrée public. Et même quand deux services partagent la machine, ils se parlent parfois via internet plutôt qu'en interne — c'est exactement ce que montre ce schéma.</p>
+
+  <div class="legend">
+    <span class="legend-item"><span class="legend-mark dim"></span>routage Traefik standard</span>
+    <span class="legend-item"><span class="legend-mark hot"></span>appel qui boucle par l'IP publique</span>
+    <span class="legend-item"><span class="legend-mark hot" style="border-top-style:dashed"></span>port publié en direct, hors Traefik</span>
+    <span class="legend-item"><span class="legend-box"></span>réseau Docker isolé</span>
+  </div>
+
+  <figure>
+    <div class="diagram-frame">
+      <svg viewBox="0 0 1000 700" role="img" aria-label="Le navigateur entre par Traefik en haut du VPS ; HubSpot appelle n8n directement depuis l'extérieur, sans passer par Traefik ; l'appel de n8n vers Odoo, bien que sur le même serveur, ressort par l'IP publique et rentre à nouveau par Traefik avant d'atteindre le conteneur Odoo, isolé dans son propre réseau Docker ; et le nœud SQL de n8n se connecte en plus directement à la base Postgres via un port publié à part, 5433, qui contourne complètement Traefik et n'est pas chiffré en TLS — un choix de démo, pas un modèle de production.">
+        <defs>
+          <marker id="arrowDim" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" style="fill:var(--wire)" />
+          </marker>
+          <marker id="arrowHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)" />
+          </marker>
+        </defs>
+
+        <!-- external actors -->
+        <rect x="20" y="330" width="150" height="80" rx="8" style="fill:var(--surface-2);stroke:var(--line)" />
+        <text x="95" y="364" text-anchor="middle" style="font:600 14px ui-serif,Georgia,serif;fill:var(--text)">HubSpot</text>
+        <text x="95" y="384" text-anchor="middle" style="font:11px ui-monospace,Menlo,monospace;fill:var(--text-dim)">CRM (SaaS)</text>
+
+        <rect x="800" y="20" width="180" height="60" rx="8" style="fill:var(--surface-2);stroke:var(--line)" />
+        <text x="890" y="46" text-anchor="middle" style="font:600 14px ui-serif,Georgia,serif;fill:var(--text)">Navigateur</text>
+        <text x="890" y="64" text-anchor="middle" style="font:11px ui-monospace,Menlo,monospace;fill:var(--text-dim)">client public</text>
+
+        <!-- VPS boundary -->
+        <rect x="200" y="100" width="780" height="580" rx="16" style="fill:none;stroke:var(--wire);stroke-width:1.5;stroke-dasharray:5 4" />
+        <text x="222" y="122" style="font:11px ui-monospace,Menlo,monospace;letter-spacing:.04em;fill:var(--text-dim)">VPS UNIQUE — srv1801548 · 72.61.183.17 · Ubuntu 24.04 · Docker</text>
+
+        <!-- Traefik band -->
+        <rect x="230" y="135" width="720" height="85" rx="10" style="fill:var(--wire-soft);stroke:var(--wire)" />
+        <text x="255" y="163" style="font:600 15px ui-serif,Georgia,serif;fill:var(--text)">Traefik — ingress unique</text>
+        <text x="255" y="182" style="font:11.5px ui-monospace,Menlo,monospace;fill:var(--text-dim)">:80 → :443 (redirect) · routage par Host() (labels Docker)</text>
+        <text x="255" y="199" style="font:11.5px ui-monospace,Menlo,monospace;fill:var(--text-dim)">TLS : Let's Encrypt, défi HTTP-01 · exposedByDefault=false</text>
+
+        <!-- hero loopback arrow (drawn before boxes it passes behind, after Traefik band) -->
+        <path d="M 490 325 C 535 245 585 190 660 190 C 715 190 705 250 700 325"
+              style="fill:none;stroke:var(--accent);stroke-width:2.5" marker-end="url(#arrowHot)" />
+        <rect x="560" y="158" width="185" height="34" rx="6" style="fill:var(--bg);stroke:var(--accent);stroke-width:1;opacity:0.95" />
+        <text x="652" y="171" text-anchor="middle" style="font:700 10.5px ui-monospace,Menlo,monospace;letter-spacing:.02em;fill:var(--accent)">boucle par l'IP publique</text>
+        <text x="652" y="185" text-anchor="middle" style="font:10px ui-monospace,Menlo,monospace;fill:var(--accent)">odoo-iniwave.luluplug.com/jsonrpc</text>
+
+        <!-- Traefik -> n8n network -->
+        <line x1="395" y1="220" x2="395" y2="253" style="stroke:var(--wire);stroke-width:1.5" marker-end="url(#arrowDim)" />
+        <text x="405" y="242" style="font:10.5px ui-monospace,Menlo,monospace;fill:var(--text-dim)">n8n.luluplug.com</text>
+
+        <!-- Traefik -> odoo network -->
+        <line x1="785" y1="220" x2="785" y2="253" style="stroke:var(--wire);stroke-width:1.5" marker-end="url(#arrowDim)" />
+        <text x="795" y="242" text-anchor="start" style="font:10.5px ui-monospace,Menlo,monospace;fill:var(--text-dim)">odoo-iniwave​.luluplug.com</text>
+
+        <!-- Navigateur -> Traefik -->
+        <line x1="890" y1="80" x2="890" y2="133" style="stroke:var(--wire);stroke-width:1.5" marker-end="url(#arrowDim)" />
+
+        <!-- HubSpot -> n8n direct (bypasses Traefik) -->
+        <line x1="170" y1="368" x2="266" y2="368" style="stroke:var(--wire);stroke-width:1.5" marker-end="url(#arrowDim)" />
+        <text x="175" y="356" style="font:10.5px ui-monospace,Menlo,monospace;fill:var(--text-dim)">GET api.hubapi.com — poll ~5 min</text>
+
+        <!-- n8n network box -->
+        <rect x="230" y="255" width="330" height="290" rx="12" style="fill:none;stroke:var(--wire);stroke-width:1.5;stroke-dasharray:5 4" />
+        <text x="250" y="278" style="font:10.5px ui-monospace,Menlo,monospace;letter-spacing:.03em;fill:var(--text-dim)">RÉSEAU DOCKER : bridge (défaut)</text>
+
+        <rect x="270" y="325" width="250" height="85" rx="8" style="fill:var(--surface);stroke:var(--wire);stroke-width:1.5" />
+        <text x="395" y="358" text-anchor="middle" style="font:600 16px ui-serif,Georgia,serif;fill:var(--text)">n8n</text>
+        <text x="395" y="378" text-anchor="middle" style="font:11px ui-monospace,Menlo,monospace;fill:var(--text-dim)">:5678 · n8n.luluplug.com</text>
+        <text x="395" y="395" text-anchor="middle" style="font:11px sans-serif;fill:var(--text-dim)">orchestre le mapping HubSpot → Odoo</text>
+
+        <!-- odoo network box -->
+        <rect x="620" y="255" width="330" height="290" rx="12" style="fill:none;stroke:var(--wire);stroke-width:1.5;stroke-dasharray:5 4" />
+        <text x="640" y="278" style="font:10.5px ui-monospace,Menlo,monospace;letter-spacing:.03em;fill:var(--text-dim)">RÉSEAU DOCKER : odoo-iniwave_default</text>
+
+        <rect x="660" y="325" width="250" height="70" rx="8" style="fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5" />
+        <text x="785" y="352" text-anchor="middle" style="font:600 16px ui-serif,Georgia,serif;fill:var(--text)">odoo</text>
+        <text x="785" y="370" text-anchor="middle" style="font:11px ui-monospace,Menlo,monospace;fill:var(--text-dim)">:8069 · odoo-iniwave.luluplug.com</text>
+
+        <line x1="785" y1="395" x2="785" y2="418" style="stroke:var(--wire);stroke-width:1.5" marker-end="url(#arrowDim)" />
+        <text x="800" y="410" style="font:10px ui-monospace,Menlo,monospace;fill:var(--text-dim)">SQL interne</text>
+
+        <rect x="660" y="420" width="250" height="60" rx="8" style="fill:var(--surface-2);stroke:var(--wire);stroke-width:1.5;stroke-dasharray:4 3" />
+        <text x="785" y="443" text-anchor="middle" style="font:600 13px ui-serif,Georgia,serif;fill:var(--text-dim)">odoo-db</text>
+        <text x="785" y="460" text-anchor="middle" style="font:10.5px ui-monospace,Menlo,monospace;fill:var(--text-dim)">Postgres 15 :5432 — port publié :5433 (hors Traefik)</text>
+
+        <!-- n8n -> odoo-db direct TCP, bypassing Traefik entirely -->
+        <path d="M 460 410 C 500 470 560 495 660 480"
+              style="fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:6 3" marker-end="url(#arrowHot)" />
+        <text x="555" y="503" text-anchor="middle" style="font:700 10px ui-monospace,Menlo,monospace;fill:var(--accent)">TCP direct :5433 — contourne Traefik, pas de TLS</text>
+
+        <!-- footnote strip: other tenants on same VPS -->
+        <line x1="230" y1="568" x2="950" y2="568" style="stroke:var(--line);stroke-width:1" />
+        <text x="230" y="592" style="font:10.5px ui-monospace,Menlo,monospace;letter-spacing:.02em;fill:var(--text-dim)">AUTRES PROJETS SUR LE MÊME VPS (réseaux isolés, sans lien avec Iniwave) :</text>
+        <text x="230" y="612" style="font:11.5px sans-serif;fill:var(--text-dim)">luluplug-website:3000 → www.luluplug.com   ·   pme-rag-chatbot:8000 → assistant-auto-ecole.luluplug.com</text>
+        <text x="230" y="638" style="font:10.5px ui-monospace,Menlo,monospace;fill:var(--text-dim)">tous les conteneurs : restart unless-stopped</text>
+      </svg>
+    </div>
+    <figcaption>Trois chemins différents pour trois besoins : le navigateur entre par l'ingress Traefik, HubSpot est appelé directement par n8n sans jamais toucher Traefik, et l'appel n8n → Odoo boucle par l'adresse publique faute de réseau Docker commun. Le nœud SQL, lui, prend un quatrième chemin : un port Postgres publié à part (5433), qui contourne Traefik entièrement — assumé comme choix de démo, pas comme modèle de production.</figcaption>
+  </figure>
+
+  <div class="callout">
+    <p class="kicker">Pourquoi ce détour compte</p>
+    <h2>n8n et Odoo tournent côte à côte, mais ne se voient pas</h2>
+    <p><code>odoo-iniwave_default</code> et le réseau de n8n sont deux réseaux Docker distincts, créés séparément par deux <code>docker compose</code> différents. Aucune route interne ne les relie : n8n ne peut pas simplement appeler <code>http://odoo:8069</code>.</p>
+    <p>Il appelle donc <code>https://odoo-iniwave.luluplug.com/jsonrpc</code> — exactement comme le ferait un client externe. La requête sort du serveur, repasse par le DNS public, revient sur le port 443, et c'est Traefik qui la route vers le bon conteneur.</p>
+    <p>C'est ce qui rend le pattern directement transférable à NetSuite : que l'ERP soit sur la même machine ou à l'autre bout d'internet, n8n lui parle de la même façon — API REST/JSON-RPC en HTTPS, aucune hypothèse de réseau partagé.</p>
+  </div>
+
+  <div class="callout wire">
+    <p class="kicker">Un quatrième chemin, assumé</p>
+    <h2>Pourquoi le dernier nœud lit la base Postgres directement</h2>
+    <p>Ce n'est pas un besoin de performance — la démo ne manipule que quelques enregistrements. Deux raisons précises : <strong>montrer la compétence</strong> (SQL/PostgreSQL est listé dans la fiche de poste), et <strong>vérifier indépendamment</strong> ce qui a été créé — l'API dit « facture créée » en parlant d'elle-même, la requête SQL relit directement la table pour confirmer que la facture existe, avec le bon client.</p>
+    <p>Pour s'y connecter, n8n utilise le port Postgres publié à part (<code>:5433</code>) — un chemin qui contourne Traefik entièrement, sans TLS. Choix assumé pour cette démo ; en production, n8n et Odoo partageraient un réseau Docker interne, sans exposer ce port du tout.</p>
+  </div>
+
+  <div class="facts">
+    <div class="fact-card">
+      <p class="label">TLS</p>
+      <p class="value">Let's Encrypt</p>
+      <p class="detail">défi HTTP-01, renouvellement automatique par Traefik</p>
+    </div>
+    <div class="fact-card">
+      <p class="label">Exposition</p>
+      <p class="value">opt-in… sauf un</p>
+      <p class="detail"><code style="font-family:ui-monospace,Menlo,monospace;font-size:11px">exposedByDefault=false</code> côté Traefik — mais le port Postgres (5433) est publié à part, hors Traefik, choix de démo à assumer</p>
+    </div>
+    <div class="fact-card">
+      <p class="label">Persistance</p>
+      <p class="value">2 volumes nommés</p>
+      <p class="detail">odoo-iniwave-db-data · odoo-iniwave-web-data</p>
+    </div>
+    <div class="fact-card">
+      <p class="label">Résilience</p>
+      <p class="value">unless-stopped</p>
+      <p class="detail">les 6 conteneurs remontent seuls après un reboot serveur</p>
+    </div>
+  </div>
+
+  <footer>
+    Domaines actifs sur ce VPS : odoo-iniwave.luluplug.com · n8n.luluplug.com · www.luluplug.com · assistant-auto-ecole.luluplug.com<br />
+    Stack démo Iniwave : Postgres 15 + Odoo 17 + n8n, orchestrés par Traefik — voir aussi le schéma de flux fonctionnel HubSpot → n8n → Odoo.
+  </footer>
+</div>

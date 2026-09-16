@@ -52,7 +52,7 @@ Basculer sur `odoo-iniwave.luluplug.com`, montrer :
 
 Revenir dans n8n, montrer le résultat du nœud Postgres (#14).
 
-> "Ce dernier nœud interroge directement la base Postgres d'Odoo, en SQL, avec une jointure entre les factures et les clients — sans repasser par l'API. Utile pour des rapports ou des vérifications ponctuelles que l'API ne permettrait pas facilement."
+> "Ce dernier nœud interroge directement la base Postgres d'Odoo, en SQL, avec une jointure entre les factures et les clients — sans repasser par l'API. Deux raisons : ça montre que je sais aussi interroger une base directement, pas seulement consommer une API. Et ça me sert de vérification indépendante — je ne me contente pas de croire ce que l'API m'a dit avoir créé, je relis directement dans la base que la facture est bien là, avec le bon client."
 
 ## 6:30 – 7:30 — Démonstration de la gestion d'erreur
 

@@ -1,5 +1,6 @@
 .env
 *.log
+.DS_Store
 
 # Export n8n : contient les vraies credentials Odoo en clair dans les Body JSON-RPC
 *.json
